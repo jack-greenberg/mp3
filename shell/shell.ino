@@ -53,11 +53,11 @@ void loop() {
       return SHELL_RET_SUCCESS; \
     } \
   \
-    var = atoi(argv[argc-1]); \
+    var = atof(argv[argc-1]); \
     eeprom_update_block(&var, &eeprom_ ## var, sizeof(var)); \
   \
     Serial.print("Set speed to: "); \
-    Serial.print((int)atoi(argv[argc-1])); \
+    Serial.print(var); \
   \
     return SHELL_RET_SUCCESS; \
   }
