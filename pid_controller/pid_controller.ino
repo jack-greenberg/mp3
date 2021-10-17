@@ -88,36 +88,52 @@ void setup() {
 void loop() {
   shell_task();
 
-  float left_ir = 5.0f * (float)analogRead(OUTER_LEFT) / 1024.0f;
-  float right_ir = 5.0f * (float)analogRead(OUTER_RIGHT) / 1024.0f;
+  float left_ir = 5.0f * (float)analogRead(INNER_LEFT) / 1024.0f;
+  float right_ir = 5.0f * (float)analogRead(INNER_RIGHT) / 1024.0f;
 
-  if (left_ir > THRESHOLD) {
-    left->setSpeed(0);
-    left->run(BACKWARD);
+  int left_speed, right_speed;
+
+  if (left_ir < THRESHOLD) {
+    if (speed - 10 < 0) {
+      left_speed = 0;
+    } else {
+      left_speed = speed - 10;
+    }
   } else {
-    left->setSpeed(speed);
-    left->run(BACKWARD);
+    left_speed = speed;
   }
-  
-  if (right_ir > THRESHOLD) {
-    right->setSpeed(0);
-    right->run(FORWARD);
+
+  if (right_ir < THRESHOLD) {
+    if (speed - 10 < 0) {
+      right_speed = 0;
+    } else {
+      right_speed = speed - 10;
+    }
   } else {
-    right->setSpeed(speed);
-    right->run(FORWARD);
+    right_speed = speed;
   }
+
+  left->setSpeed(left_speed);
+  left->run(BACKWARD);
+
+  right->setSpeed(right_speed);
+  right->run(FORWARD);  
 
 //  float diff = left_ir - right_ir;
 //
-//  float err = cal - diff;
+//  float out = pid_step(&pid, cal, diff);
 //
-//  float out = 2*err;
-
-  // Set left motor speed
-  
-
-  // Set right motor speed
-  
+//  Serial.print(diff);
+//  Serial.print(", ");
+//  Serial.println(out);
+//
+//  // Set left motor speed
+//  left->setSpeed(speed + out);
+//  left->run(BACKWARD);
+//
+//  // Set right motor speed
+//  right->setSpeed(speed - out);
+//  right->run(FORWARD);
 
   delay(100); // PID timestep is 100ms
 }
