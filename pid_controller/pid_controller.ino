@@ -41,6 +41,25 @@ float cal = 0.0f;
 //Initialize values:
 PID pid = { 0 };
 
+/*
+   Used for UART shell
+*/
+int shell_reader(char * data)
+{
+  // Wrapper for Serial.read() method
+  if (Serial.available()) {
+    *data = Serial.read();
+    return 1;
+  }
+  return 0;
+}
+
+void shell_writer(char data)
+{
+  // Wrapper for Serial.write() method
+//  Serial.write(data);
+}
+
 SHELL_SETTER_CMD(kp, pid.kp)
 SHELL_SETTER_CMD(ki, pid.ki)
 SHELL_SETTER_CMD(kd, pid.kd)
@@ -89,41 +108,48 @@ void loop() {
   float left_ir = 5.0f * (float)analogRead(OUTER_LEFT) / 1024.0f;
   float right_ir = 5.0f * (float)analogRead(OUTER_RIGHT) / 1024.0f;
 
-  float inner_left_ir = 5.0f * (float)analogRead(INNER_LEFT) / 1024.0f; 
-  float inner_right_ir = 5.0f * (float)analogRead(INNER_RIGHT) / 1024.0f; 
-  float inner_avg = 0.5*(inner_left_ir + inner_right_ir); 
-
-  float diff = inner_left_ir - right_ir;
+  float diff = (left_ir - right_ir);
 
   float out = pid_step(&pid, cal, diff);
- 
+   
   if (speed > 0) {
-    Serial.print(cal - diff);
-    Serial.print(", ");
-
-    Serial.print(speed + out);
-    Serial.print(", ");
-    Serial.print(speed - out);
-
-    if (speed + out < 0) {
-      left->setSpeed(abs(speed + out));
+    if (left_ir - right_ir > 2.5) {
+      left->setSpeed(speed);
+      right->setSpeed(speed);
       left->run(FORWARD);
-    } else {
-      left->setSpeed(speed + out);
+      right->run(FORWARD);
+    } else if (left_ir - right_ir < -2.5) {
+      left->setSpeed(speed);
+      right->setSpeed(speed);
       left->run(BACKWARD);
-    }
-
-    if (speed - out < 0) {
-      right->setSpeed(abs(speed - out));
       right->run(BACKWARD);
     } else {
-      right->setSpeed(speed - out);
-      right->run(FORWARD);
-    }
+      Serial.print(cal - diff);
+      Serial.print(", ");
   
-    
- 
-    Serial.println("");
+      Serial.print(speed + out);
+      Serial.print(", ");
+      Serial.print(speed - out);
+  
+      if (speed + out < 0) {
+        // Negative
+        left->setSpeed(abs(speed + out));
+        left->run(FORWARD);
+      } else {
+        left->setSpeed(speed + out);
+        left->run(BACKWARD);
+      }
+  
+      if (speed - out < 0) {
+        right->setSpeed(abs(speed - out));
+        right->run(BACKWARD);
+      } else {
+        right->setSpeed(speed - out);
+        right->run(FORWARD);
+      }
+
+      Serial.println("");
+    }
   } else {
     left->setSpeed(0);
     left->run(BACKWARD);
@@ -133,24 +159,5 @@ void loop() {
     right->run(FORWARD);
   }
 
-  delay(10); // PID timestep is 100ms
-}
-
-/*
-   Used for UART shell
-*/
-int shell_reader(char * data)
-{
-  // Wrapper for Serial.read() method
-  if (Serial.available()) {
-    *data = Serial.read();
-    return 1;
-  }
-  return 0;
-}
-
-void shell_writer(char data)
-{
-  // Wrapper for Serial.write() method
-//  Serial.write(data);
+  delay(10); // PID timestep is 10ms
 }
