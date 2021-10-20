@@ -19,7 +19,6 @@
     return SHELL_RET_SUCCESS; \
   }
 
-#define THRESHOLD (2.5f)
 #define OUTER_RIGHT (A1) // blue
 #define INNER_RIGHT (A0) // purple
 #define INNER_LEFT (A2) // green
@@ -36,7 +35,7 @@ float eeprom_cal __attribute__((section(".eeprom"))) = 0;
 int eeprom_speed __attribute__((section(".eeprom"))) = 0;
 
 int speed = 0; // Base speed of motors
-float cal = 0.0f;
+float cal = 0.0f; //Sensor setpoint
 
 //Initialize values:
 PID pid = { 0 };
@@ -57,7 +56,7 @@ int shell_reader(char * data)
 void shell_writer(char data)
 {
   // Wrapper for Serial.write() method
-//  Serial.write(data);
+  //  Serial.write(data);
 }
 
 SHELL_SETTER_CMD(kp, pid.kp)
@@ -105,14 +104,18 @@ void setup() {
 void loop() {
   shell_task();
 
+/*
+  Reading outer sensor values and converting to voltage
+*/
   float left_ir = 5.0f * (float)analogRead(OUTER_LEFT) / 1024.0f;
   float right_ir = 5.0f * (float)analogRead(OUTER_RIGHT) / 1024.0f;
 
   float diff = (left_ir - right_ir);
 
   float out = pid_step(&pid, cal, diff);
-   
+
   if (speed > 0) {
+    //Special cases where there are hard angle turns:
     if (left_ir - right_ir > 2.5) {
       left->setSpeed(speed);
       right->setSpeed(speed);
@@ -123,6 +126,8 @@ void loop() {
       right->setSpeed(speed);
       left->run(BACKWARD);
       right->run(BACKWARD);
+
+    //No hard angle turns: 
     } else {
       Serial.print(cal - diff);
       Serial.print(", ");
@@ -130,16 +135,20 @@ void loop() {
       Serial.print(speed + out);
       Serial.print(", ");
       Serial.print(speed - out);
-  
-      if (speed + out < 0) {
-        // Negative
+
+/*
+    Setting motor speed based on PID output
+*/
+    //Adjusting to the right: 
+      if (speed + out < 0) { 
         left->setSpeed(abs(speed + out));
         left->run(FORWARD);
       } else {
         left->setSpeed(speed + out);
         left->run(BACKWARD);
       }
-  
+
+    //Adjusting to the left:
       if (speed - out < 0) {
         right->setSpeed(abs(speed - out));
         right->run(BACKWARD);
@@ -151,6 +160,7 @@ void loop() {
       Serial.println("");
     }
   } else {
+    // Set left motor speed
     left->setSpeed(0);
     left->run(BACKWARD);
   
