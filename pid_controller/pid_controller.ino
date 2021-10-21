@@ -108,8 +108,8 @@ void loop() {
     Reading outer sensor values and converting to voltage
   */
   float left_ir = 5.0f * (float)analogRead(OUTER_LEFT) / 1024.0f;
-  float right_ir = 5.0f * (float)an      //No hard angle turns:
-alogRead(OUTER_RIGHT) / 1024.0f;
+  float right_ir = 5.0f * (float)analogRead(OUTER_RIGHT) / 1024.0f;
+
 
   float diff = (left_ir - right_ir);
 
