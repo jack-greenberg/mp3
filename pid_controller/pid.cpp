@@ -9,7 +9,6 @@ float pid_step(PID* pid, float setpoint, float measurement) {
   // Integrator term
   pid->integrator = pid->integrator + (0.5f * pid->ki * pid->T * (error + pid->prev_error));
 
-  // Integrator anti-windup to prevent over-saturation
   float lim_min_int, lim_max_int;
 
   if (pid->lim_max > proportional) {
