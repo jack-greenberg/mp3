@@ -142,7 +142,7 @@ void loop() {
       /*
           Setting motor speed based on PID output
       */
-      //Adjusting to the right:
+      //Adjusting left motor: 
       if (speed + out < 0) {
         left->setSpeed(abs(speed + out));
         left->run(FORWARD);
@@ -151,7 +151,7 @@ void loop() {
         left->run(BACKWARD);
       }
 
-      //Adjusting to the left:
+      //Adjusting right motor:
       if (speed - out < 0) {
         right->setSpeed(abs(speed - out));
         right->run(BACKWARD);
